@@ -1,0 +1,57 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+.env/
+.venv/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Logs and debug files
+logs/
+*.log
+debug.log
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-workspace
+
+# macOS and Windows system files
+.DS_Store
+Thumbs.db
+
+# Test coverage reports
+htmlcov/
+coverage.xml
+*.cover
+*.py,cover
+
+# MyPy type checker cache
+.mypy_cache/
+
+# Pytest cache
+.pytest_cache/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Pipenv, Poetry, or Conda environments
+Pipfile
+Pipfile.lock
+poetry.lock
+
+# Docker
+*.dockerfile
+.envrc
+
+# Misc
+*.swp  # Vim swap files
+
+mangas/
