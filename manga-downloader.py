@@ -1,4 +1,5 @@
 import os
+import re
 import time
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -20,11 +21,11 @@ def click_view_all(driver):
 
 def get_title(driver):
   title_element = driver.find_element(By.CSS_SELECTOR, 'h3.text-xl a.link-pri.link-hover')
-  return title_element.text
+  return sanitize_path(title_element.text)
 
 def get_chapter(driver):
   chapter_element = driver.find_element(By.CSS_SELECTOR, 'h6.text-lg a.link-primary span')
-  return chapter_element.text
+  return sanitize_path(chapter_element.text)
 
 def make_screenshot(driver, path):
   time.sleep(1)
@@ -62,6 +63,11 @@ def save_chapter(driver, url):
     return
   
   save_chapter(driver, next_url)
+
+def sanitize_path(path):
+  forbidden_chars = r'[\/:*?"<>|]'
+  sanitized_path = re.sub(forbidden_chars, "_", path)  
+  return sanitized_path
 
 print('🤖: Saving BL manga chapters...')
 with build_driver() as driver:
