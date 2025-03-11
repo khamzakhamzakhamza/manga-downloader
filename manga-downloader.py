@@ -6,6 +6,7 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
+from PIL import Image
 
 chapter_url = input('🤖: Paste link to the first chapter here => ')
 
@@ -52,11 +53,12 @@ def save_chapter(driver, url):
   title = get_title(driver)
   chapter = get_chapter(driver)
 
-  managa_path = f'mangas/{title}'
-  os.makedirs(managa_path, exist_ok=True)
-  make_screenshot(driver, f'{managa_path}/{chapter}.png')
+  manga_path = f'mangas/{title}'
 
-  print(f"🤖: Saved chapter {chapter} from {title} to {managa_path}")
+  os.makedirs(manga_path, exist_ok=True)
+  save_screenshot(driver, manga_path, chapter)
+
+  print(f"🤖: Saved chapter {chapter} from {title} to {manga_path}")
 
   next_url = get_next_chapter(driver)
   if next_url is None:
@@ -68,6 +70,17 @@ def sanitize_path(path):
   forbidden_chars = r'[\/:*?"<>|]'
   sanitized_path = re.sub(forbidden_chars, "_", path)  
   return sanitized_path
+
+def save_screenshot(driver, manga_path, chapter):
+  path = f'{manga_path}/{chapter}'
+  make_screenshot(driver, f'{path}.png')
+  convert_png_to_pdf(f'{path}.png', f'{path}.pdf')
+  os.remove(f'{path}.png')
+
+def convert_png_to_pdf(png_path, pdf_path):
+  image = Image.open(png_path)
+  image = image.convert("RGB")
+  image.save(pdf_path, "PDF")
 
 print('🤖: Saving BL manga chapters...')
 with build_driver() as driver:
