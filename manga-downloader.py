@@ -6,7 +6,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 
-chapter_url = 'https://bato.to/title/121443-snow-fairy-official/2207331-ch_1'
+chapter_url = input('🤖: Paste link to the first chapter here => ')
 
 def build_driver():
   options = webdriver.ChromeOptions()
@@ -43,13 +43,8 @@ def get_next_chapter(driver):
   except NoSuchElementException as _:
     return None
 
-
 def save_chapter(driver, url):
   driver.get(url)
-
-  next_url = get_next_chapter(driver)
-  if next_url is None:
-    return
   
   click_view_all(driver)
 
@@ -60,9 +55,15 @@ def save_chapter(driver, url):
   os.makedirs(managa_path, exist_ok=True)
   make_screenshot(driver, f'{managa_path}/{chapter}.png')
 
-  print(f"Saved chapter {chapter} from {title} to {managa_path}")
+  print(f"🤖: Saved chapter {chapter} from {title} to {managa_path}")
 
+  next_url = get_next_chapter(driver)
+  if next_url is None:
+    return
+  
   save_chapter(driver, next_url)
 
+print('🤖: Saving BL manga chapters...')
 with build_driver() as driver:
   save_chapter(driver, chapter_url)
+print('🤖: Max BL capacity reached! 💥(×_×)💥')
