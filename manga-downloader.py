@@ -46,7 +46,7 @@ def take_screenshot(driver, path, chapter, attempt=0):
   driver.set_window_size(window_width, height)
   driver.execute_script(f"window.scrollTo(0, {attempt * max_height});")
 
-  file_name = f'{chapter}{f'-{attempt}' if attempt > 0 else ''}'
+  file_name = f'{chapter}{f'-{attempt}'}'
   png_path = f'{path}/{file_name}.png'
   
   driver.save_screenshot(png_path)
