@@ -29,18 +29,33 @@ def get_chapter(driver):
   chapter_element = driver.find_element(By.CSS_SELECTOR, 'h6.text-lg a.link-primary span')
   return sanitize_path(chapter_element.text)
 
-def make_screenshot(driver, path):
+def take_screenshot(driver, path, chapter, attempt=0):
   window_width = 1100
+  max_height = 58000
   driver.set_window_size(window_width, 600)
+  split = False
 
   time.sleep(1)
 
-  total_height = driver.execute_script("return document.body.scrollHeight")
-  driver.set_window_size(window_width, total_height)
+  height = driver.execute_script("return document.body.scrollHeight") - attempt * max_height
+  if height > max_height:
+    print(f'🤖: {chapter} is too long! Splitting into multiple screenshots...')
+    height = max_height
+    split = True
 
-  driver.save_screenshot(path)
-  with open(path, 'wb') as file:
-    file.write(driver.get_screenshot_as_png())
+  print(chapter, height)
+  driver.set_window_size(window_width, height)
+  driver.execute_script(f"window.scrollTo(0, {attempt * max_height});")
+
+  file_name = f'{chapter}{f'-{attempt}' if attempt > 0 else ''}'
+  png_path = f'{path}/{file_name}.png'
+  
+  driver.save_screenshot(png_path)
+  convert_png_to_pdf(png_path, path, file_name)
+  os.remove(png_path)
+
+  if split:
+    take_screenshot(driver, path, chapter, attempt+1)
 
 def get_next_chapter(driver):
   try:
@@ -60,7 +75,7 @@ def save_chapter(driver, url):
   manga_path = f'mangas/{title}'
 
   os.makedirs(manga_path, exist_ok=True)
-  save_screenshot(driver, manga_path, chapter)
+  take_screenshot(driver, manga_path, chapter)
 
   print(f"🤖: Saved chapter {chapter} from {title} to {manga_path}")
 
@@ -75,18 +90,13 @@ def sanitize_path(path):
   sanitized_path = re.sub(forbidden_chars, "_", path)  
   return sanitized_path
 
-def save_screenshot(driver, manga_path, chapter):
-  path = f'{manga_path}/{chapter}'
-  make_screenshot(driver, f'{path}.png')
-  convert_png_to_pdf(f'{path}.png', f'{path}.pdf')
-  os.remove(f'{path}.png')
-
 def select_zoom_mode(driver):
   select_element = driver.find_element(By.CSS_SELECTOR, "select[data-name='page-zoom']")
   select = Select(select_element)
   select.select_by_value("2")
 
-def convert_png_to_pdf(png_path, pdf_path):
+def convert_png_to_pdf(png_path, path, file_name):
+  pdf_path = f'{path}/{file_name}.pdf'
   image = Image.open(png_path)
   image = image.convert("RGB")
   image.save(pdf_path, "PDF")
