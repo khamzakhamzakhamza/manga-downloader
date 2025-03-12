@@ -43,7 +43,6 @@ def take_screenshot(driver, path, chapter, attempt=0):
     height = max_height
     split = True
 
-  print(chapter, height)
   driver.set_window_size(window_width, height)
   driver.execute_script(f"window.scrollTo(0, {attempt * max_height});")
 
