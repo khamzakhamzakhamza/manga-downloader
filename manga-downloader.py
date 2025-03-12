@@ -6,6 +6,7 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.support.ui import Select
 from PIL import Image
 
 chapter_url = input('🤖: Paste link to the first chapter here => ')
@@ -13,7 +14,7 @@ chapter_url = input('🤖: Paste link to the first chapter here => ')
 def build_driver():
   options = webdriver.ChromeOptions()
   options.add_argument("--headless")
-  options.add_argument("--start-maximized")
+  options.add_argument("--disable-gpu")
   return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
 def click_view_all(driver):
@@ -29,11 +30,13 @@ def get_chapter(driver):
   return sanitize_path(chapter_element.text)
 
 def make_screenshot(driver, path):
+  window_width = 1100
+  driver.set_window_size(window_width, 600)
+
   time.sleep(1)
 
   total_height = driver.execute_script("return document.body.scrollHeight")
-
-  driver.set_window_size(1920, total_height)
+  driver.set_window_size(window_width, total_height)
 
   driver.save_screenshot(path)
   with open(path, 'wb') as file:
@@ -48,6 +51,7 @@ def get_next_chapter(driver):
 def save_chapter(driver, url):
   driver.get(url)
   
+  select_zoom_mode(driver)
   click_view_all(driver)
 
   title = get_title(driver)
@@ -76,6 +80,11 @@ def save_screenshot(driver, manga_path, chapter):
   make_screenshot(driver, f'{path}.png')
   convert_png_to_pdf(f'{path}.png', f'{path}.pdf')
   os.remove(f'{path}.png')
+
+def select_zoom_mode(driver):
+  select_element = driver.find_element(By.CSS_SELECTOR, "select[data-name='page-zoom']")
+  select = Select(select_element)
+  select.select_by_value("2")
 
 def convert_png_to_pdf(png_path, pdf_path):
   image = Image.open(png_path)
