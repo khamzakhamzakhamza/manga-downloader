@@ -13,9 +13,8 @@ from PIL import Image
 chapter_url = input('🤖: Paste link to the first chapter here => ')
 
 def load_all_images(driver):
-  time.sleep(2)
+  time.sleep(5)
   images = driver.find_elements(By.TAG_NAME, 'img')
-  print(f'🤖: Found {len(images)} images. Waiting for them to load...')
 
   for i in range(len(images)):
     img = driver.find_elements(By.TAG_NAME, 'img')[i]
@@ -66,7 +65,7 @@ def take_screenshot(driver, path, chapter, attempt=0):
 
   driver.set_window_size(window_width, height)
   driver.execute_script(f"window.scrollTo(0, {attempt * max_height});")
-  time.sleep(1)
+  load_all_images(driver)
 
   file_name = f'{chapter}{f'-{attempt}'}'
   png_path = f'{path}/{file_name}.png'
@@ -90,7 +89,6 @@ def save_chapter(driver, url):
   set_window_size(driver)
   select_zoom_mode(driver)
   click_view_all(driver)
-  load_all_images(driver)
 
   title = get_title(driver)
   chapter = get_chapter(driver)
