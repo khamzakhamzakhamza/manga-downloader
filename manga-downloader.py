@@ -12,6 +12,18 @@ from PIL import Image
 
 chapter_url = input('🤖: Paste link to the first chapter here => ')
 
+def load_all_images(driver):
+  time.sleep(2)
+  images = driver.find_elements(By.TAG_NAME, 'img')
+  print(f'🤖: Found {len(images)} images. Waiting for them to load...')
+
+  for i in range(len(images)):
+    img = driver.find_elements(By.TAG_NAME, 'img')[i]
+    if not img.is_displayed():
+      continue
+
+    WebDriverWait(driver, 10).until(lambda d: img.get_attribute('complete'))
+
 def build_driver():
   options = webdriver.ChromeOptions()
   options.add_argument("--headless")
@@ -38,7 +50,7 @@ def set_window_size(driver):
   window_width = 1100
 
   driver.set_window_size(window_width, 600)
-  driver.execute_script(f"window.scrollTo(0, 0);")
+  driver.execute_script("window.scrollTo(0, 0);")
   time.sleep(5)
 
 def take_screenshot(driver, path, chapter, attempt=0):
@@ -78,6 +90,7 @@ def save_chapter(driver, url):
   set_window_size(driver)
   select_zoom_mode(driver)
   click_view_all(driver)
+  load_all_images(driver)
 
   title = get_title(driver)
   chapter = get_chapter(driver)
