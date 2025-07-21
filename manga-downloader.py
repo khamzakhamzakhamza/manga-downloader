@@ -6,7 +6,8 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver.support.ui import Select
+from selenium.webdriver.support.ui import WebDriverWait, Select
+from selenium.webdriver.support import expected_conditions as EC
 from PIL import Image
 
 chapter_url = input('🤖: Paste link to the first chapter here => ')
@@ -18,8 +19,12 @@ def build_driver():
   return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
 def click_view_all(driver):
-  btn_text = 'load all pages'
-  driver.find_element("xpath", f"//button[text()='{btn_text}']").click()
+  select_element = WebDriverWait(driver, 10).until(
+      EC.visibility_of_element_located((By.CSS_SELECTOR, "select[data-name='page-load']"))
+  )
+
+  select = Select(select_element)
+  select.select_by_value("2")
 
 def get_title(driver):
   title_element = driver.find_element(By.CSS_SELECTOR, 'h3.text-xl a.link-pri.link-hover')
@@ -29,13 +34,17 @@ def get_chapter(driver):
   chapter_element = driver.find_element(By.CSS_SELECTOR, 'h6.text-lg a.link-primary span')
   return sanitize_path(chapter_element.text)
 
+def set_window_size(driver):
+  window_width = 1100
+
+  driver.set_window_size(window_width, 600)
+  driver.execute_script(f"window.scrollTo(0, 0);")
+  time.sleep(5)
+
 def take_screenshot(driver, path, chapter, attempt=0):
   window_width = 1100
   max_height = 58000
-  driver.set_window_size(window_width, 600)
   split = False
-
-  time.sleep(1)
 
   height = driver.execute_script("return document.body.scrollHeight") - attempt * max_height
   if height > max_height:
@@ -45,6 +54,7 @@ def take_screenshot(driver, path, chapter, attempt=0):
 
   driver.set_window_size(window_width, height)
   driver.execute_script(f"window.scrollTo(0, {attempt * max_height});")
+  time.sleep(1)
 
   file_name = f'{chapter}{f'-{attempt}'}'
   png_path = f'{path}/{file_name}.png'
@@ -65,6 +75,7 @@ def get_next_chapter(driver):
 def save_chapter(driver, url):
   driver.get(url)
   
+  set_window_size(driver)
   select_zoom_mode(driver)
   click_view_all(driver)
 
@@ -90,7 +101,10 @@ def sanitize_path(path):
   return sanitized_path
 
 def select_zoom_mode(driver):
-  select_element = driver.find_element(By.CSS_SELECTOR, "select[data-name='page-zoom']")
+  select_element = WebDriverWait(driver, 10).until(
+      EC.visibility_of_element_located((By.CSS_SELECTOR, "select[data-name='page-zoom']"))
+  )
+
   select = Select(select_element)
   select.select_by_value("2")
 
