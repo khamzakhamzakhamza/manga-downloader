@@ -17,11 +17,14 @@ def load_all_images(driver):
   images = driver.find_elements(By.TAG_NAME, 'img')
 
   for i in range(len(images)):
-    img = driver.find_elements(By.TAG_NAME, 'img')[i]
-    if not img.is_displayed():
-      continue
+    try:
+      img = driver.find_elements(By.TAG_NAME, 'img')[i]
+      if not img.is_displayed():
+        continue
 
-    WebDriverWait(driver, 10).until(lambda d: img.get_attribute('complete'))
+      WebDriverWait(driver, 10).until(lambda d: img.get_attribute('complete'))
+    except Exception:
+      continue
 
 def build_driver():
   options = webdriver.ChromeOptions()
@@ -50,7 +53,7 @@ def set_window_size(driver):
 
   driver.set_window_size(window_width, 600)
   driver.execute_script("window.scrollTo(0, 0);")
-  time.sleep(5)
+  time.sleep(10)
 
 def take_screenshot(driver, path, chapter, attempt=0):
   window_width = 1100
