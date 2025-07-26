@@ -1,6 +1,7 @@
 import os
 import re
 import time
+import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
@@ -11,20 +12,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from PIL import Image
 
 chapter_url = input('🤖: Paste link to the first chapter here => ')
-
-def load_all_images(driver):
-  time.sleep(5)
-  images = driver.find_elements(By.TAG_NAME, 'img')
-
-  for i in range(len(images)):
-    try:
-      img = driver.find_elements(By.TAG_NAME, 'img')[i]
-      if not img.is_displayed():
-        continue
-
-      WebDriverWait(driver, 10).until(lambda d: img.get_attribute('complete'))
-    except Exception:
-      continue
 
 def build_driver():
   options = webdriver.ChromeOptions()
@@ -53,38 +40,47 @@ def set_window_size(driver):
 
   driver.set_window_size(window_width, 600)
   driver.execute_script("window.scrollTo(0, 0);")
-  time.sleep(10)
-
-def take_screenshot(driver, path, chapter, attempt=0):
-  window_width = 1100
-  max_height = 58000
-  split = False
-
-  height = driver.execute_script("return document.body.scrollHeight") - attempt * max_height
-  if height > max_height:
-    print(f'🤖: {chapter} is too long! Splitting into multiple screenshots...')
-    height = max_height
-    split = True
-
-  driver.set_window_size(window_width, height)
-  driver.execute_script(f"window.scrollTo(0, {attempt * max_height});")
-  load_all_images(driver)
-
-  file_name = f'{chapter}{f'-{attempt}'}'
-  png_path = f'{path}/{file_name}.png'
-  
-  driver.save_screenshot(png_path)
-  convert_png_to_pdf(png_path, path, file_name)
-  os.remove(png_path)
-
-  if split:
-    take_screenshot(driver, path, chapter, attempt+1)
+  time.sleep(5)
 
 def get_next_chapter(driver):
   try:
     return driver.find_element(By.XPATH, "//a[@class='btn btn-sm btn-outline btn-primary']/span[text()='Next Chapter ▶']").find_element(By.XPATH, "..").get_attribute('href')
   except NoSuchElementException as _:
     return None
+
+def save_pictures(driver, path, chapter):
+  time.sleep(5)
+  images = driver.find_elements(By.CSS_SELECTOR, 'div[name="image-item"] img')
+
+  for i, img in enumerate(images):
+    try:
+      src = img.get_attribute('src')
+
+      file_name = f'{chapter}-{i+1}.png'
+      file_path = os.path.join(path, file_name)
+
+      response = requests.get(src)
+
+      with open(file_path, 'wb') as f:
+        f.write(response.content)
+    except Exception as e:
+      print(f"🤖: Failed to download image. {chapter} {i} {e}")
+
+def create_pdf(title):
+  path = f'mangas/{title}'
+  images = []
+  
+  for file_name in sorted(os.listdir(path)):
+    if file_name.endswith('.png'):
+      img_path = os.path.join(path, file_name)
+      images.append(Image.open(img_path))
+
+  if images:
+    pdf_path = os.path.join(path, f'{title}.pdf')
+    images[0].save(pdf_path, save_all=True, append_images=images[1:])
+    print(f"🤖: Created PDF at {pdf_path}")
+  else:
+    print("🤖: No images found to create PDF.")
 
 def save_chapter(driver, url):
   driver.get(url)
@@ -97,14 +93,14 @@ def save_chapter(driver, url):
   chapter = get_chapter(driver)
 
   manga_path = f'mangas/{title}'
-
   os.makedirs(manga_path, exist_ok=True)
-  take_screenshot(driver, manga_path, chapter)
 
+  save_pictures(driver, manga_path, chapter)
   print(f"🤖: Saved chapter {chapter} from {title} to {manga_path}")
 
   next_url = get_next_chapter(driver)
   if next_url is None:
+    create_pdf(title)
     return
   
   save_chapter(driver, next_url)
@@ -121,12 +117,6 @@ def select_zoom_mode(driver):
 
   select = Select(select_element)
   select.select_by_value("2")
-
-def convert_png_to_pdf(png_path, path, file_name):
-  pdf_path = f'{path}/{file_name}.pdf'
-  image = Image.open(png_path)
-  image = image.convert("RGB")
-  image.save(pdf_path, "PDF")
 
 print('🤖: Saving BL manga chapters...')
 with build_driver() as driver:
