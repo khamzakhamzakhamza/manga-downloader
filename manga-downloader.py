@@ -40,7 +40,7 @@ def set_window_size(driver):
 
   driver.set_window_size(window_width, 600)
   driver.execute_script("window.scrollTo(0, 0);")
-  time.sleep(5)
+  time.sleep(1)
 
 def get_next_chapter(driver):
   try:
@@ -49,6 +49,7 @@ def get_next_chapter(driver):
     return None
 
 def save_pictures(driver, path, chapter):
+  clean_images(path)
   time.sleep(5)
   images = driver.find_elements(By.CSS_SELECTOR, 'div[name="image-item"] img')
 
@@ -56,7 +57,7 @@ def save_pictures(driver, path, chapter):
     try:
       src = img.get_attribute('src')
 
-      file_name = f'{chapter}-{i+1}.png'
+      file_name = f'{i}.png'
       file_path = os.path.join(path, file_name)
 
       response = requests.get(src)
@@ -66,17 +67,18 @@ def save_pictures(driver, path, chapter):
     except Exception as e:
       print(f"🤖: Failed to download image. {chapter} {i} {e}")
 
-def create_pdf(title):
+def create_pdf(title, chapter):
   path = f'mangas/{title}'
   images = []
   
-  for file_name in sorted(os.listdir(path)):
-    if file_name.endswith('.png'):
-      img_path = os.path.join(path, file_name)
-      images.append(Image.open(img_path))
+  imgs = [i for i in os.listdir(path) if i.endswith('.png')]
+
+  for i in range(len(imgs)):
+    img_path = os.path.join(path, f'{i}.png')
+    images.append(Image.open(img_path))
 
   if images:
-    pdf_path = os.path.join(path, f'{title}.pdf')
+    pdf_path = os.path.join(path, f'{title} {chapter}.pdf')
     images[0].save(pdf_path, save_all=True, append_images=images[1:])
     print(f"🤖: Created PDF at {pdf_path}")
   else:
@@ -96,11 +98,13 @@ def save_chapter(driver, url):
   os.makedirs(manga_path, exist_ok=True)
 
   save_pictures(driver, manga_path, chapter)
+  create_pdf(title, chapter)
+
   print(f"🤖: Saved chapter {chapter} from {title} to {manga_path}")
 
   next_url = get_next_chapter(driver)
   if next_url is None:
-    create_pdf(title)
+    clean_images(manga_path)
     return
   
   save_chapter(driver, next_url)
@@ -117,6 +121,11 @@ def select_zoom_mode(driver):
 
   select = Select(select_element)
   select.select_by_value("2")
+
+def clean_images(path):
+  for file in os.listdir(path):
+    if file.endswith('.png'):
+      os.remove(os.path.join(path, file))
 
 print('🤖: Saving BL manga chapters...')
 with build_driver() as driver:
