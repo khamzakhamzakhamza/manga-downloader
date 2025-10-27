@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import List
 
 class BatoScraper(ABC):
     @property
@@ -7,17 +8,17 @@ class BatoScraper(ABC):
         pass
     
     @abstractmethod
-    def download_next_chapter(self):
+    async def download_next_chapter(self):
         pass
     
     @abstractmethod
-    def get_title(self) -> str:
+    async def get_title(self) -> str:
         pass
     
     @abstractmethod
-    def get_current_chapter_name(self) -> str:
+    async def get_current_chapter_name(self) -> str:
         pass
     
     @abstractmethod
-    def get_manga_zip(self) -> bytes:
+    def get_manga_zip(self) -> List[str]:
         pass
