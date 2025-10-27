@@ -22,3 +22,7 @@ class BatoScraper(ABC):
     @abstractmethod
     def get_manga_zip(self) -> List[str]:
         pass
+
+    @abstractmethod
+    async def cleanup(self):
+        pass
