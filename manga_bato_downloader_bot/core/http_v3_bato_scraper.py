@@ -1,8 +1,8 @@
 import os
 import httpx
-from typing import List, Optional
-from manga_bato_downloader_bot.core.fetcher_interface import Fetcher
-from manga_bato_downloader_bot.core.playwright_fetcher import PlaywrightFetcher
+from typing import Optional
+from .fetcher_interface import Fetcher
+from .http_fetcher import HttpFetcher
 from .bato_scraper_interface import BatoScraper
 from .compressor import Compressor
 from PIL import Image
@@ -12,18 +12,17 @@ MANGAS_FOLDER_NAME = 'mangas'
 class HttpV3BatoScraper(BatoScraper):
     def __init__(self, link: str):
         self.link = link
-        self._archives = []
         self._has_more_chapters = True
         self._title: Optional[str] = None
         self._chapter: Optional[str] = None
         self._compressor = Compressor()
-        self._fetcher: Fetcher = PlaywrightFetcher()
+        self._fetcher: Fetcher = HttpFetcher()
 
     @property
     def has_more_chapters(self) -> bool:
         return self._has_more_chapters
 
-    async def download_next_chapter(self):
+    async def download_next_chapter(self) -> str | None:
         if not self.has_more_chapters:
             return
         
@@ -39,18 +38,19 @@ class HttpV3BatoScraper(BatoScraper):
                 r = await client.get(img_url)
                 await self._save_img(f'{i}.png', r.content)
         
-        await self._create_pdf()
+        chapter_pdf_path = await self._create_pdf()
         await self._clean_images()
-
-        # TODO: Check if folder is bigger than 50 MB
-
-        self._archives.append(self._compressor.compress_folder(title, f'{title}_{len(self._archives)+1}'))
 
         next_chapter_url = await self._fetcher.fetch_next_chapter_url()
         if next_chapter_url:
             self.link = f'https://bato.to{next_chapter_url}'
         else:
             self._has_more_chapters = False
+
+        if chapter_pdf_path:
+            return chapter_pdf_path
+        
+        return None
 
     async def get_title(self) -> str:
         if self._title is not None:
@@ -63,9 +63,6 @@ class HttpV3BatoScraper(BatoScraper):
         self._chapter = await self._fetcher.fetch_current_chapter_name()
         return self._chapter
 
-    def get_manga_zip(self) -> List[str]:
-        return self._archives
-    
     async def cleanup(self):
         await self._fetcher.stop()
 
@@ -85,7 +82,7 @@ class HttpV3BatoScraper(BatoScraper):
         with open(img_path, "wb") as f:
             f.write(img)
     
-    async def _create_pdf(self):
+    async def _create_pdf(self) -> str | None:
         module_root = os.path.dirname(os.path.abspath(__file__))
         manga_path = os.path.join(module_root, MANGAS_FOLDER_NAME, await self.get_title())
         images = []
@@ -99,6 +96,9 @@ class HttpV3BatoScraper(BatoScraper):
         if images:
             pdf_path = os.path.join(manga_path, f'{await self.get_title()} {await self.get_current_chapter_name()}.pdf')
             images[0].save(pdf_path, save_all=True, append_images=images[1:])
+            return pdf_path
+        
+        return None
     
     async def _clean_images(self):
         module_root = os.path.dirname(os.path.abspath(__file__))

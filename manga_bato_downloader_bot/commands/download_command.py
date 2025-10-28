@@ -18,17 +18,17 @@ async def download_command(update, _):
     scraper: BatoScraper = HttpV3BatoScraper(link)
     await update.message.reply_text("🤖: Saving BL manga chapters...")
 
-    while scraper.has_more_chapters:
-        await scraper.download_next_chapter()
-        await update.message.reply_text(f"🤖: Saved chapter {await scraper.get_current_chapter_name()} from {await scraper.get_title()}")
+    try:
+        while scraper.has_more_chapters:
+            chapter_pdf_path = await scraper.download_next_chapter()
+        
+            if chapter_pdf_path:
+                with open(chapter_pdf_path, "rb") as f:
+                    await update.message.reply_document(f, filename=os.path.basename(f"{await scraper.get_current_chapter_name()} from {await scraper.get_title()}.pdf"))
 
-    await update.message.reply_text("🤖: Here’s your manga:")
-    
-    archives = scraper.get_manga_zip()
-    for archive in archives:
-        with open(archive, "rb") as f:
-            await update.message.reply_document(f, filename=os.path.basename(archive))
+        await update.message.reply_text("🤖: Max BL capacity reached! 💥(×_×)💥\n\n To download some more: /download")
+    except Exception as e:
+        await update.message.reply_text(f"🤖: An error occurred 😭: {str(e)}\n\nTry again later: /download")
 
-    await update.message.reply_text("🤖: Max BL capacity reached! 💥(×_×)💥\n\n To download some more: /download")
-
+    await scraper.cleanup()
     return ConversationHandler.END
