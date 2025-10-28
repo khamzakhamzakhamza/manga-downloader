@@ -5,6 +5,7 @@ from manga_bato_downloader_bot.core.fetcher_interface import Fetcher
 from manga_bato_downloader_bot.core.playwright_fetcher import PlaywrightFetcher
 from .bato_scraper_interface import BatoScraper
 from .compressor import Compressor
+from PIL import Image
 
 MANGAS_FOLDER_NAME = 'mangas'
 
@@ -34,21 +35,22 @@ class HttpV3BatoScraper(BatoScraper):
 
         img_urls = await self._fetcher.fetch_imgs()
         async with httpx.AsyncClient() as client:
-            for img_url in img_urls:
+            for i, img_url in enumerate(img_urls):
                 r = await client.get(img_url)
-                if r.status_code == 200:
-                    filename = f'{img_urls.index(img_url)}.png'
-                    module_root = os.path.dirname(os.path.abspath(__file__))
-                    manga_path = os.path.join(module_root, MANGAS_FOLDER_NAME, title)
-
-                    with open(os.path.join(manga_path, filename), "wb") as f:
-                        f.write(r.content)
+                await self._save_img(f'{i}.png', r.content)
+        
+        await self._create_pdf()
+        await self._clean_images()
 
         # TODO: Check if folder is bigger than 50 MB
 
         self._archives.append(self._compressor.compress_folder(title, f'{title}_{len(self._archives)+1}'))
 
-        self._has_more_chapters = False
+        next_chapter_url = await self._fetcher.fetch_next_chapter_url()
+        if next_chapter_url:
+            self.link = f'https://bato.to{next_chapter_url}'
+        else:
+            self._has_more_chapters = False
 
     async def get_title(self) -> str:
         if self._title is not None:
@@ -75,3 +77,33 @@ class HttpV3BatoScraper(BatoScraper):
 
         folder_path = os.path.join(manga_path, folder_name)
         os.makedirs(folder_path, exist_ok=True)
+
+    async def _save_img(self, name: str, img: bytes):
+        module_root = os.path.dirname(os.path.abspath(__file__))
+        img_path = os.path.join(module_root, MANGAS_FOLDER_NAME, await self.get_title(), name)
+
+        with open(img_path, "wb") as f:
+            f.write(img)
+    
+    async def _create_pdf(self):
+        module_root = os.path.dirname(os.path.abspath(__file__))
+        manga_path = os.path.join(module_root, MANGAS_FOLDER_NAME, await self.get_title())
+        images = []
+        
+        imgs = [i for i in os.listdir(manga_path) if i.endswith('.png')]
+
+        for i in range(len(imgs)):
+            img_path = os.path.join(manga_path, f'{i}.png')
+            images.append(Image.open(img_path))
+
+        if images:
+            pdf_path = os.path.join(manga_path, f'{await self.get_title()} {await self.get_current_chapter_name()}.pdf')
+            images[0].save(pdf_path, save_all=True, append_images=images[1:])
+    
+    async def _clean_images(self):
+        module_root = os.path.dirname(os.path.abspath(__file__))
+        manga_path = os.path.join(module_root, MANGAS_FOLDER_NAME, await self.get_title())
+
+        for file in os.listdir(manga_path):
+            if file.endswith('.png'):
+                os.remove(os.path.join(manga_path, file))

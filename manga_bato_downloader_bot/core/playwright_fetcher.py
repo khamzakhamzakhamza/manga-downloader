@@ -43,6 +43,15 @@ class PlaywrightFetcher(Fetcher):
         chapter_element = await self.page.wait_for_selector("h6.text-lg a.link-primary span")
         chapter_text = await chapter_element.inner_text() if chapter_element else None
         return self._sanitize_path(chapter_text)
+    
+    async def fetch_next_chapter_url(self) -> str | None:
+        try:
+            next_chapter_element = await self.page.wait_for_selector("//a[@class='btn btn-sm btn-outline btn-primary']/span[text()='Next Chapter ▶']", timeout=5000)
+            parent = await next_chapter_element.evaluate_handle("node => node.parentElement")
+            href = await parent.get_attribute("href")
+            return href
+        except:
+            return None
 
     async def stop(self):
         if self.browser:
