@@ -28,3 +28,7 @@ jobs:
       - name: Build and tag Docker image
         run: |
           docker build -t khamzakhamza/manga-bot .
+          docker tag khamzakhamza/manga-bot:latest -t ghcr.io/${{ github.repository }}/khamzakhamza/manga-bot:${{ github.sha }} .
+
+      - name: Push Docker image
+        run: docker push ghcr.io/${{ github.repository }}/khamzakhamza/manga-bot:${{ github.sha }}
