@@ -1,11 +1,15 @@
+import os
 from telegram.ext import Application, MessageHandler, CommandHandler, ConversationHandler, filters
 from manga_bato_downloader_bot.commands.download_command import download_command as download
 from manga_bato_downloader_bot.commands.get_link_command import get_link_command as get_link
 from manga_bato_downloader_bot.commands.cancel_command import cancel_command as cancel
 from manga_bato_downloader_bot.commands.states import States
+from dotenv import load_dotenv
+
+load_dotenv()
 
 WELCOME_MSG = "🤖: Hello! I'm Manga Downloader Bot. Send /download to start downloading mangas from https://bato.to/v3x"
-TOKEN = ""
+TOKEN = os.getenv("TOKEN")
 
 async def reply(update, _):
     await update.message.reply_text(WELCOME_MSG)

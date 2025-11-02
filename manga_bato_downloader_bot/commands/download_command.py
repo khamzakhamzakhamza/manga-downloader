@@ -5,7 +5,7 @@ from manga_bato_downloader_bot.core.http_v3_bato_scraper import HttpV3BatoScrape
 import re
 
 BATO_LINK_PATTERN = re.compile(
-    r"^https://bato\.to/title/[a-zA-Z0-9_-]+/[0-9]+-ch_[0-9]+/?$"
+    r"^https://bato\.to/title/[^/]+/[0-9]+-[^/]+/?$"
 )
 
 async def download_command(update, _):
