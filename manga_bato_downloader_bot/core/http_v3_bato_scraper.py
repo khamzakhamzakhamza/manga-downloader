@@ -1,5 +1,6 @@
 import httpx
 from typing import Optional
+from tenacity import retry, stop_after_attempt, wait_exponential
 from manga_bato_downloader_bot.core.file_manager import FileManager
 from .fetcher_interface import Fetcher
 from .http_fetcher import HttpFetcher
@@ -20,6 +21,7 @@ class HttpV3BatoScraper(BatoScraper):
     def has_more_chapters(self) -> bool:
         return self._has_more_chapters
 
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=5))
     async def download_next_chapter(self) -> str | None:
         if not self.has_more_chapters:
             return

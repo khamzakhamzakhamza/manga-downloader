@@ -2,6 +2,7 @@ import html
 import json
 import re
 from typing import Optional
+from tenacity import retry, stop_after_attempt, wait_exponential
 from curl_cffi.requests import AsyncSession
 from .fetcher_interface import Fetcher
 
@@ -9,6 +10,7 @@ class HttpFetcher(Fetcher):
     def __init__(self):
         self.html: Optional[str] = None
     
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=5))
     async def fetch_html(self, link: str):
         link = f"{link}?zoom=2"
 
