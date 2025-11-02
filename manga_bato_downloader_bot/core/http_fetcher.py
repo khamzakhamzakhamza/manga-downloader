@@ -17,7 +17,7 @@ class HttpFetcher(Fetcher):
             r.raise_for_status()
             self.html = r.text
         
-    async def fetch_imgs(self) -> list[str]:
+    def fetch_imgs(self) -> list[str]:
         if self.html is None:
             return []
         
@@ -31,15 +31,15 @@ class HttpFetcher(Fetcher):
         imgs = json.loads(html.unescape(props_raw))['imageFiles'][1]
         return [img[1] for img in json.loads(imgs)]
     
-    async def fetch_title(self) -> str:
+    def fetch_title(self) -> str:
         title_rg = r"<title>(.*?)\s*-"
         return self._search_text(title_rg)
     
-    async def fetch_current_chapter_name(self) -> str:        
+    def fetch_current_chapter_name(self) -> str:        
         chapter_rg = r"<title>.*-\s*(.*?)\s*-"
         return self._search_text(chapter_rg)
     
-    async def fetch_next_chapter_url(self) -> str | None:
+    def fetch_next_chapter_url(self) -> str | None:
         if self.html is None:
             return None
         
@@ -50,15 +50,15 @@ class HttpFetcher(Fetcher):
             return match.group(1)
                 
         return None
-
-    async def stop(self):
-        return
     
     def _search_text(self, pattern: str) -> str:
         if not self.html:
             return ''
         
         match = re.search(pattern, self.html)
+        if not match:
+            return ''
+        
         chapter = html.unescape(match.group(1))
         return self._sanitize_path(chapter.strip())
 

@@ -6,21 +6,17 @@ class Fetcher(ABC):
         pass
     
     @abstractmethod
-    async def fetch_title(self) -> str:
+    def fetch_title(self) -> str:
         pass
 
     @abstractmethod
-    async def fetch_imgs(self) -> list[str]:
+    def fetch_imgs(self) -> list[str]:
         pass
     
     @abstractmethod
-    async def fetch_current_chapter_name(self) -> str:
+    def fetch_current_chapter_name(self) -> str:
         pass
 
     @abstractmethod
-    async def fetch_next_chapter_url(self) -> str | None:
-        pass
-    
-    @abstractmethod
-    async def stop(self):
+    def fetch_next_chapter_url(self) -> str | None:
         pass

@@ -11,13 +11,13 @@ class BatoScraper(ABC):
         pass
     
     @abstractmethod
-    async def get_title(self) -> str:
+    def get_title(self) -> str:
         pass
     
     @abstractmethod
-    async def get_current_chapter_name(self) -> str:
+    def get_current_chapter_name(self) -> str:
         pass
 
     @abstractmethod
-    async def cleanup(self):
+    def cleanup(self):
         pass

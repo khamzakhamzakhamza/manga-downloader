@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import os
 from telegram.ext import Application, MessageHandler, CommandHandler, ConversationHandler, filters
 from manga_bato_downloader_bot.commands.download_command import download_command as download
@@ -33,7 +34,7 @@ def main():
     application.add_handler(conv)
     application.add_handler(MessageHandler(filters.TEXT, reply))
     
-    print("Telegram Bot started!", flush=True)
+    print(f"{datetime.now(timezone.utc).isoformat()} Telegram Bot started!", flush=True)
     application.run_polling()
 
 if __name__ == '__main__':
