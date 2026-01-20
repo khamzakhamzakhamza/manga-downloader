@@ -55,4 +55,9 @@ poetry.lock
 # Misc
 *.swp  # Vim swap files
 
+# Google Drive credentials and tokens
+credentials.json
+token.pickle
+*-b7d73f237cc8.json
+
 mangas/
