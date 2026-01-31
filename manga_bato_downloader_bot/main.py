@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-WELCOME_MSG = "🤖: Hello! I'm Manga Downloader Bot. Send /download to start downloading mangas from https://bato.to/v3x"
+WELCOME_MSG = "🤖: Hello! I'm Manga Downloader Bot. Send /download to start downloading manga."
 TOKEN = os.getenv("TOKEN")
 
 async def reply(update, _):

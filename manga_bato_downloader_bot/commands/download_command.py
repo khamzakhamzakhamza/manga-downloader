@@ -2,26 +2,21 @@ from datetime import datetime, timezone
 import os
 import uuid
 from telegram.ext import ConversationHandler
-from manga_bato_downloader_bot.core.bato_scraper_interface import BatoScraper
-from manga_bato_downloader_bot.core.http_v3_bato_scraper import HttpV3BatoScraper
-import re
-
-BATO_LINK_PATTERN = re.compile(
-    r"^https://bato\.to/title/[^/]+/[0-9]+-[^/]+/?$"
-)
+from manga_bato_downloader_bot.core.scraper_interface import MangaScraper
+from manga_bato_downloader_bot.core.mangago_scraper import MangagoScraper
 
 async def download_command(update, _):
     correlation_id = uuid.uuid4()
-    
+
     link = update.message.text
     print(f"{datetime.now(timezone.utc).isoformat()} {correlation_id} Starting dowload. Link {link}", flush=True)
 
-    if not BATO_LINK_PATTERN.match(link):
-        await update.message.reply_text("🤖: Link is invalid 😭\n\nPlease make sure link matches expected pattern: https://bato.to/title/manga-name/1111111-ch_1 \n\nTry again: /download")
-        print(f"{datetime.now(timezone.utc).isoformat()} {correlation_id} Validation failed", flush=True)
+    if "mangago" not in link:
+        await update.message.reply_text("🤖: Only Mangago links are supported. Send a Mangago chapter link.")
         return ConversationHandler.END
-    
-    scraper: BatoScraper = HttpV3BatoScraper(link)
+
+    scraper: MangaScraper = MangagoScraper(link)
+
     await update.message.reply_text("🤖: Saving BL manga chapters...")
     
     try:
