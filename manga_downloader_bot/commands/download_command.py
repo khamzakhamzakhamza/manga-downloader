@@ -1,0 +1,47 @@
+from datetime import datetime, timezone
+import uuid
+from telegram.ext import ConversationHandler
+from manga_downloader_bot.core.scraper_interface import MangaScraper
+from manga_downloader_bot.core.mangago_scraper import MangagoScraper
+from manga_downloader_bot.core.pdf_builder import PdfBuilder
+from manga_downloader_bot.core.upload import S3PublicUploader
+
+async def download_command(update, _):
+    correlation_id = uuid.uuid4()
+
+    link = update.message.text
+    print(f"{datetime.now(timezone.utc).isoformat()} {correlation_id} Starting dowload. Link {link}", flush=True)
+
+    if "mangago" not in link:
+        await update.message.reply_text("🤖: Only Mangago links are supported. Send a Mangago chapter link.")
+        return ConversationHandler.END
+
+    scraper: MangaScraper = MangagoScraper(link)
+    pdf_builder = PdfBuilder()
+    uploader = S3PublicUploader()
+
+    downloaded_pdfs: list[bytes] = []
+
+    await update.message.reply_text("🤖: Saving manga chapters...")
+
+    try:
+        # while scraper.has_more_chapters:
+        chapter_images = await scraper.download_next_chapter()
+        print(f"{datetime.now(timezone.utc).isoformat()} {correlation_id} Downloaded chapter {scraper.get_title()} {scraper.get_current_chapter_name()}", flush=True)
+
+        if chapter_images:
+            reference_size = scraper.get_reference_img_size()
+            pdf_bytes = pdf_builder.build(chapter_images, reference_size)
+            downloaded_pdfs.append(pdf_bytes)
+            await update.message.reply_text(f"🤖: {scraper.get_current_chapter_name()} from {scraper.get_title()}.pdf")
+
+        folder_url = uploader.upload_manga(scraper.get_title(), downloaded_pdfs)
+        await update.message.reply_text(f"🤖: Max manga capacity reached! 💥(×_×)💥\n\nDownload your manga here: {folder_url} \n\n To download some more: /download")
+        print(f"{datetime.now(timezone.utc).isoformat()} {correlation_id} Download success", flush=True)
+    except Exception as e:
+        print(f"{datetime.now(timezone.utc).isoformat()} {correlation_id} Download failed. Exception: {e}", flush=True)
+        await update.message.reply_text(f"🤖: An error occurred 😭\n\nTry again later: /download")
+
+    scraper.cleanup()
+    print(f"{datetime.now(timezone.utc).isoformat()} {correlation_id} Cleanup finished", flush=True)
+    return ConversationHandler.END

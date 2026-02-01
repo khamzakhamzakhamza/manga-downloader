@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from .chapter_image import ChapterImage
 
 class MangaScraper(ABC):
     @property
@@ -7,7 +8,7 @@ class MangaScraper(ABC):
         pass
 
     @abstractmethod
-    async def download_next_chapter(self) -> str:
+    async def download_next_chapter(self) -> list[ChapterImage] | None:
         pass
 
     @abstractmethod
@@ -16,6 +17,10 @@ class MangaScraper(ABC):
 
     @abstractmethod
     def get_current_chapter_name(self) -> str:
+        pass
+
+    @abstractmethod
+    def get_reference_img_size(self) -> tuple[int, int] | None:
         pass
 
     @abstractmethod

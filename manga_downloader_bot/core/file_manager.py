@@ -18,6 +18,11 @@ class FileManager:
         with open(img_path, "wb") as f:
             f.write(img)
 
+    def save_img_pil(self, manga_title: str, img_name: str, img: Image):
+        img_path = os.path.join(self._get_manga_path(), manga_title, img_name)
+
+        img.save(img_path)
+
     def create_pdf(self, manga_title: str, chapter_name: str) -> str | None:
         folder_path = os.path.join(self._get_manga_path(), manga_title)
         images = []

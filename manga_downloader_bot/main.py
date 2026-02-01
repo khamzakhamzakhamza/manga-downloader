@@ -1,10 +1,10 @@
 from datetime import datetime, timezone
 import os
 from telegram.ext import Application, MessageHandler, CommandHandler, ConversationHandler, filters
-from manga_bato_downloader_bot.commands.download_command import download_command as download
-from manga_bato_downloader_bot.commands.get_link_command import get_link_command as get_link
-from manga_bato_downloader_bot.commands.cancel_command import cancel_command as cancel
-from manga_bato_downloader_bot.commands.states import States
+from manga_downloader_bot.commands.download_command import download_command as download
+from manga_downloader_bot.commands.get_link_command import get_link_command as get_link
+from manga_downloader_bot.commands.cancel_command import cancel_command as cancel
+from manga_downloader_bot.commands.states import States
 from dotenv import load_dotenv
 
 load_dotenv()

@@ -1,0 +1,21 @@
+---
+description: Project rules for manga-downloader
+globs:
+alwaysApply: true
+---
+
+# Project rules
+
+Don't put any comments anywhere, they are super annoying.
+
+Don't try to catch any exceptions, unless instructed otherwise.
+
+Don't print any outputs or logs, unless instructed otherwise.
+
+Output the simplest code you can, don't try to be fancy.
+
+Don't run any terminal commands.
+
+Keep commit messages to one short sentence.
+
+Can you gime me plans to approve before implementing anything complex pls.
