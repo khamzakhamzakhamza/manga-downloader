@@ -25,15 +25,15 @@ async def download_command(update, _):
     await update.message.reply_text("🤖: Saving manga chapters...")
 
     try:
-        # while scraper.has_more_chapters:
-        chapter_images = await scraper.download_next_chapter()
-        print(f"{datetime.now(timezone.utc).isoformat()} {correlation_id} Downloaded chapter {scraper.get_title()} {scraper.get_current_chapter_name()}", flush=True)
+        while scraper.has_more_chapters:
+            chapter_images = await scraper.download_next_chapter()
+            print(f"{datetime.now(timezone.utc).isoformat()} {correlation_id} Downloaded chapter {scraper.get_title()} {scraper.get_current_chapter_name()}", flush=True)
 
-        if chapter_images:
-            reference_size = scraper.get_reference_img_size()
-            pdf_bytes = pdf_builder.build(chapter_images, reference_size)
-            downloaded_pdfs.append(pdf_bytes)
-            await update.message.reply_text(f"🤖: {scraper.get_current_chapter_name()} from {scraper.get_title()}.pdf")
+            if chapter_images:
+                reference_size = scraper.get_reference_img_size()
+                pdf_bytes = pdf_builder.build(chapter_images, reference_size)
+                downloaded_pdfs.append(pdf_bytes)
+                await update.message.reply_text(f"🤖: {scraper.get_current_chapter_name()} from {scraper.get_title()}.pdf")
 
         folder_url = uploader.upload_manga(scraper.get_title(), downloaded_pdfs)
         await update.message.reply_text(f"🤖: Max manga capacity reached! 💥(×_×)💥\n\nDownload your manga here: {folder_url} \n\n To download some more: /download")
