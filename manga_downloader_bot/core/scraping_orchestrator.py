@@ -1,18 +1,16 @@
 import re
 from typing import Optional
 from tenacity import retry, stop_after_attempt, wait_exponential
-from manga_downloader_bot.core.selenium_fetcher import SeleniumFetcher
-from .fetcher_interface import Fetcher
-from .scraper_interface import MangaScraper
+from manga_downloader_bot.core.scrapers import MangagoScraper, Scraper
 from .chapter_image import ChapterImage
 
-class MangagoScraper(MangaScraper):
+class ScrapingOrchestrator:
     def __init__(self, link: str):
         self.link = link
         self._has_more_chapters = True
         self._title: Optional[str] = None
         self._chapter: Optional[str] = None
-        self._fetcher: Fetcher = SeleniumFetcher()
+        self._fetcher: Scraper = MangagoScraper()
 
     @property
     def has_more_chapters(self) -> bool:
@@ -37,7 +35,7 @@ class MangagoScraper(MangaScraper):
     def get_title(self) -> str:
         if self._title is not None:
             return self._title
-        
+
         self._title = self._fetcher.fetch_title()
         self._title = re.sub(r'[:\\-\\/|?*"<>\']', '', self._title)
         return self._title

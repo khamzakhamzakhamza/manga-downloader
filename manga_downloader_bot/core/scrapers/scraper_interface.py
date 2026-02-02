@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from .chapter_image import ChapterImage
+from ..chapter_image import ChapterImage
 
-class Fetcher(ABC):
+class Scraper(ABC):
     @abstractmethod
     async def fetch_html(self):
         pass
@@ -13,7 +13,7 @@ class Fetcher(ABC):
     @abstractmethod
     def fetch_imgs(self) -> list[ChapterImage]:
         pass
-    
+
     @abstractmethod
     def fetch_current_chapter_name(self) -> str:
         pass
