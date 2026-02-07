@@ -1,8 +1,8 @@
 import re
 from typing import Optional
 from tenacity import retry, stop_after_attempt, wait_exponential
+from manga_downloader_bot.core.chapter import Chapter
 from manga_downloader_bot.core.scrapers import MangagoScraper, Scraper
-from .chapter_image import ChapterImage
 
 class ScrapingOrchestrator:
     def __init__(self, link: str):
@@ -17,20 +17,23 @@ class ScrapingOrchestrator:
         return self._has_more_chapters
 
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=5))
-    async def download_next_chapter(self) -> list[ChapterImage] | None:
+    async def download_next_chapter(self) -> Chapter | None:
         if not self.has_more_chapters:
             return None
 
         await self._fetcher.fetch_html(self.link)
-        self.get_title()
-        images = self._fetcher.fetch_imgs()
+        chapter = Chapter(
+            title=self.get_title(),
+            imgs=self._fetcher.fetch_imgs(),
+            chapter_name=self.get_current_chapter_name()
+        )
 
         next_chapter_url = self._fetcher.fetch_next_chapter_url()
         self.link = next_chapter_url
         if not next_chapter_url or "recommend-manga" in next_chapter_url:
             self._has_more_chapters = False
 
-        return images if images else None
+        return chapter if chapter.imgs else None
 
     def get_title(self) -> str:
         if self._title is not None:

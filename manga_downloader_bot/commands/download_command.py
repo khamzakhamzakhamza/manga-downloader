@@ -25,12 +25,12 @@ async def download_command(update, _):
 
     try:
         while scraper.has_more_chapters:
-            chapter_images = await scraper.download_next_chapter()
+            chapter = await scraper.download_next_chapter()
             print(f"{datetime.now(timezone.utc).isoformat()} {correlation_id} Downloaded chapter {scraper.get_title()} {scraper.get_current_chapter_name()}", flush=True)
 
-            if chapter_images:
+            if chapter.imgs:
                 reference_size = scraper.get_reference_img_size()
-                pdf_bytes = pdf_builder.build(chapter_images, reference_size)
+                pdf_bytes = pdf_builder.build(chapter.imgs, reference_size)
                 downloaded_pdfs.append(pdf_bytes)
                 await status_msg.edit_text(f"🤖: Downloaded {len(downloaded_pdfs)} chapter(s)...")
 
