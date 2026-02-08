@@ -23,9 +23,5 @@ class Scraper(ABC):
         pass
 
     @abstractmethod
-    def get_reference_img_size(self) -> tuple[int, int] | None:
-        pass
-
-    @abstractmethod
     def cleanup(self):
         pass

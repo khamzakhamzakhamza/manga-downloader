@@ -22,20 +22,21 @@ class ScrapingOrchestrator:
             return None
 
         await self._fetcher.fetch_html(self.link)
+
         chapter = Chapter(
-            title=self.get_title(),
+            title=self.__get_title(),
             imgs=self._fetcher.fetch_imgs(),
-            chapter_name=self.get_current_chapter_name()
+            chapter_name=self.__get_current_chapter_name()
         )
 
         next_chapter_url = self._fetcher.fetch_next_chapter_url()
         self.link = next_chapter_url
-        if not next_chapter_url or "recommend-manga" in next_chapter_url:
+        if not next_chapter_url:
             self._has_more_chapters = False
 
-        return chapter if chapter.imgs else None
+        return chapter
 
-    def get_title(self) -> str:
+    def __get_title(self) -> str:
         if self._title is not None:
             return self._title
 
@@ -43,12 +44,9 @@ class ScrapingOrchestrator:
         self._title = re.sub(r'[:\\-\\/|?*"<>\']', '', self._title)
         return self._title
 
-    def get_current_chapter_name(self) -> str:
+    def __get_current_chapter_name(self) -> str:
         self._chapter = self._fetcher.fetch_current_chapter_name()
         return self._chapter
-
-    def get_reference_img_size(self) -> tuple[int, int] | None:
-        return self._fetcher.get_reference_img_size()
 
     def cleanup(self):
         self._fetcher.cleanup()

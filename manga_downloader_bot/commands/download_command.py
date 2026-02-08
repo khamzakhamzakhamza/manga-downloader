@@ -11,8 +11,8 @@ async def download_command(update, _):
     link = update.message.text
     print(f"{datetime.now(timezone.utc).isoformat()} {correlation_id} Starting dowload. Link {link}", flush=True)
 
-    if "mangago" not in link:
-        await update.message.reply_text("🤖: Only Mangago links are supported. Send a Mangago chapter link.\n\nTry again: /download")
+    if "mangago" not in link or not link.endswith(".me/") and ".me/" not in link:
+        await update.message.reply_text("🤖: Only Mangago (.me) links are supported. Send a Mangago chapter link.\n\nTry again: /download")
         return ConversationHandler.END
 
     scraper = ScrapingOrchestrator(link)
@@ -24,17 +24,19 @@ async def download_command(update, _):
     status_msg = await update.message.reply_text("🤖: Downloaded 0 chapters...")
 
     try:
+        title: str|None = None
+
         while scraper.has_more_chapters:
             chapter = await scraper.download_next_chapter()
-            print(f"{datetime.now(timezone.utc).isoformat()} {correlation_id} Downloaded chapter {scraper.get_title()} {scraper.get_current_chapter_name()}", flush=True)
+            title = chapter.title
+            print(f"{datetime.now(timezone.utc).isoformat()} {correlation_id} Downloaded chapter {chapter.title} {chapter.chapter_name}", flush=True)
 
             if chapter.imgs:
-                reference_size = scraper.get_reference_img_size()
-                pdf_bytes = pdf_builder.build(chapter.imgs, reference_size)
+                pdf_bytes = pdf_builder.build(chapter.imgs)
                 downloaded_pdfs.append(pdf_bytes)
                 await status_msg.edit_text(f"🤖: Downloaded {len(downloaded_pdfs)} chapter(s)...")
 
-        folder_url = uploader.upload_manga(scraper.get_title(), downloaded_pdfs)
+        folder_url = uploader.upload_manga(title, downloaded_pdfs)
         await update.message.reply_text(f"🤖: Max manga capacity reached! 💥(×_×)💥\n\nDownload your manga here: {folder_url} \n\n To download some more: /download")
         print(f"{datetime.now(timezone.utc).isoformat()} {correlation_id} Download success", flush=True)
     except Exception as e:
