@@ -13,6 +13,7 @@ from selenium.webdriver.common.by import By
 class MangagoScraper(Scraper):
     def __init__(self):
         options = webdriver.ChromeOptions()
+        options.add_argument("--no-sandbox") 
         options.add_argument("--disable-gpu")
         self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
         self._reference_img_width: int | None = None

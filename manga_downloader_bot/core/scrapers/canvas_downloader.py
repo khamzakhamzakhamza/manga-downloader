@@ -38,4 +38,4 @@ class CanvasDownloader:
         l = rect["left"]
         r = l + rect["width"]
         b = rect["height"]
-        combined = combined.crop((l, 0, r, b))
+        return combined.crop((l, 0, r, b))
