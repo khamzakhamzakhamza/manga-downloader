@@ -2,6 +2,7 @@ import io
 from urllib.parse import urljoin
 import httpx
 from PIL import Image
+from manga_downloader_bot.core.scrapers.canvas_downloader import CanvasDownloader
 from .scraper_interface import Scraper
 from ..chapter_image import ChapterImage
 from selenium import webdriver
@@ -60,7 +61,9 @@ class MangagoScraper(Scraper):
                 self._reference_img_width = im.width
 
             return ChapterImage(image=im, is_canvas=False)
-        return ChapterImage(image=self.__screenshot_canvas(), is_canvas=True)
+        
+        self.__remove_ads()
+        return ChapterImage(image=CanvasDownloader.download(self.driver), is_canvas=True)
 
     def __get_pages_count(self) -> int:
         ul_elem = self.driver.find_element(By.ID, "dropdown-menu-page")
@@ -78,29 +81,8 @@ class MangagoScraper(Scraper):
         new_height = int(self._reference_img_width * aspect_ratio)
         ch_img.image = img.resize((self._reference_img_width, new_height), Image.Resampling.LANCZOS)
 
-    def __screenshot_canvas(self) -> Image:
-        canvas = self.driver.find_element(By.TAG_NAME, "canvas")
-
-        self.driver.execute_script("document.body.style.zoom='50%'")
-        self.driver.execute_script("arguments[0].scrollIntoView();", canvas)
-
-        rect = self.driver.execute_script(
-            "return arguments[0].getBoundingClientRect();",
-            canvas
-        )
-
-        png = self.driver.get_screenshot_as_png()
-        im = Image.open(io.BytesIO(png))
-
-        dpr = self.driver.execute_script("return window.devicePixelRatio;")
-
-        l = rect["left"] * dpr
-        r = l + rect["width"] * dpr
-        b = rect["height"] * dpr
-        im = im.crop((l, 0, r, b))
-
-        self.driver.execute_script("document.body.style.zoom='100%'")
-        return im.convert("RGB")
+    def __remove_ads(self):
+        self.driver.execute_script("""document.querySelectorAll('[class*="ad"], [class*="aa_"], [id*="ad"], iframe').forEach(ad => ad.remove());""")
 
     def cleanup(self):
         self.driver.quit()
